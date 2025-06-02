@@ -2,10 +2,8 @@ import streamlit as st
 import json
 import os
 
-# Archivo para guardar los datos
 DB_FILE = "estudiantes.json"
 
-# Consejos por estilo
 consejos = {
     "visual": "Usa mapas mentales, diagramas y colores para enseñar.",
     "auditivo": "Habla en voz alta, usa canciones o rimas.",
@@ -13,19 +11,16 @@ consejos = {
     "lector/escritor": "Usa listas, resúmenes y escritura repetida."
 }
 
-# Cargar base de datos
 def cargar_estudiantes():
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r") as f:
             return json.load(f)
     return {}
 
-# Guardar base de datos
 def guardar_estudiantes(data):
     with open(DB_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
-# Login de admin
 def login():
     st.sidebar.title("🔐 Iniciar sesión")
     clave = st.sidebar.text_input("Contraseña de administrador", type="password")
@@ -35,25 +30,22 @@ def login():
         st.sidebar.error("Contraseña incorrecta")
     return False
 
-# Título principal
 st.title("🎓 Base de Datos: Estilos de Aprendizaje")
 
-# Cargar datos
 estudiantes = cargar_estudiantes()
-
-# Intento de login
 es_admin = login()
 
 if es_admin:
     st.success("Bienvenido administrador 👋")
 
-    # Añadir estudiante
-    st.subheader("➕ Añadir estudiante")
+    st.subheader("➕ Añadir o editar estudiante")
     nombre = st.text_input("Nombre del estudiante")
+    genero = st.selectbox("Género", ["Masculino", "Femenino"])
     estilo = st.selectbox("Estilo de aprendizaje", list(consejos.keys()))
+
     if st.button("Guardar estudiante"):
         if nombre:
-            estudiantes[nombre] = estilo
+            estudiantes[nombre] = {"genero": genero, "estilo": estilo}
             guardar_estudiantes(estudiantes)
             st.success(f"{nombre} ha sido guardado con estilo '{estilo}'")
         else:
@@ -61,14 +53,16 @@ if es_admin:
 
     st.divider()
 
-# Buscar estudiante (disponible para todos)
 st.subheader("🔍 Buscar estudiante")
 buscar = st.text_input("Buscar por nombre")
 if buscar:
-    resultado = estudiantes.get(buscar)
-    if resultado:
-        st.info(f"{buscar} tiene un estilo de aprendizaje **{resultado}**")
-        st.write("💡 Consejo:", consejos[resultado])
+    datos = estudiantes.get(buscar)
+    if datos:
+        estilo = datos["estilo"]
+        genero = datos["genero"]
+        emoji = "🧒" if genero == "Masculino" else "👧"
+        st.info(f"{emoji} {buscar} tiene un estilo de aprendizaje **{estilo}**")
+        st.write("💡 Consejo:", consejos[estilo])
 
         if es_admin and st.button("Eliminar estudiante"):
             estudiantes.pop(buscar)
@@ -79,10 +73,10 @@ if buscar:
 
 st.divider()
 
-# Mostrar todos los estudiantes (disponible para todos)
 st.subheader("📋 Lista de todos los estudiantes")
 if estudiantes:
-    for nombre, estilo in estudiantes.items():
-        st.write(f"🧒 **{nombre}** — estilo: *{estilo}*")
+    for nombre, datos in estudiantes.items():
+        emoji = "🧒" if datos["genero"] == "Masculino" else "👧"
+        st.write(f"{emoji} **{nombre}** — estilo: *{datos['estilo']}*")
 else:
     st.info("Todavía no hay estudiantes registrados.")
