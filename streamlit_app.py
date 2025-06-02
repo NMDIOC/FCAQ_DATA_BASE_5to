@@ -15,10 +15,10 @@ consejos = {
 
 # Usuarios y contraseñas
 usuarios_autorizados = {
-    "Nicolas Medina": {"rol": "propietario", "clave": "admin2013"},
-    "Tomas Maldonado": {"rol": "admin", "clave": "admin143"},
-    "Simon Romoleroux": {"rol": "admin", "clave": "admin153"},
-    "Eva Godoy": {"rol": "admin", "clave": "admin3"},
+    "Nicolas Medina": {"rol": "propietario", "clave": "Sabu3319"},
+    "Tomas Maldonado": {"rol": "admin", "clave": "admin123"},
+    "Simon Romoleroux": {"rol": "admin", "clave": "admin123"},
+    "Eva Godoy": {"rol": "admin", "clave": "admin123"},
 }
 
 # Funciones para la base de datos
@@ -77,4 +77,23 @@ st.subheader("🔍 Buscar estudiante")
 buscar = st.text_input("Buscar por nombre")
 if buscar:
     datos = estudiantes.get(buscar)
-    if
+    if datos:
+        estilo = datos["estilo"]
+        st.info(f"{buscar} tiene un estilo de aprendizaje **{estilo}**")
+        st.write("💡 Consejo:", consejos[estilo])
+
+        # Solo el propietario puede eliminar
+        if rol == "propietario" and st.button("Eliminar estudiante"):
+            estudiantes.pop(buscar)
+            guardar_estudiantes(estudiantes)
+            st.warning(f"{buscar} fue eliminado de la base de datos")
+    else:
+        st.error("Estudiante no encontrado")
+
+# Mostrar lista completa (todos la pueden ver)
+st.subheader("📋 Lista de todos los estudiantes")
+if estudiantes:
+    for nombre, datos in estudiantes.items():
+        st.write(f"**{nombre}** — estilo: *{datos['estilo']}*")
+else:
+    st.info("Todavía no hay estudiantes registrados.")
