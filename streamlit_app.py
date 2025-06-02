@@ -15,10 +15,10 @@ consejos = {
 
 # Usuarios y contraseñas
 usuarios_autorizados = {
-    "Nicolas Medina": {"rol": "propietario", "clave": "Sabu3319"},
-    "Tomas Maldonado": {"rol": "admin", "clave": "admin123"},
-    "Simon Romoleroux": {"rol": "admin", "clave": "admin123"},
-    "Eva Godoy": {"rol": "admin", "clave": "admin123"},
+    "Nicolas Medina": {"rol": "propietario", "clave": "admin2013"},
+    "Tomas Maldonado": {"rol": "admin", "clave": "admin143"},
+    "Simon Romoleroux": {"rol": "admin", "clave": "admin133"},
+    "Eva Godoy": {"rol": "admin", "clave": "admin3"},
 }
 
 # Funciones para la base de datos
