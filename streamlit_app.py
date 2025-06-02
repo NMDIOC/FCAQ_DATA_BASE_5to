@@ -2,8 +2,16 @@ import streamlit as st
 import json
 import os
 
-# Archivo JSON de la base de datos
+# Archivo para guardar los datos
 DB_FILE = "estudiantes.json"
+
+# Usuarios y contraseñas autorizadas
+USUARIOS = {
+    "Nicolas Medina": {"rol": "propietario", "clave": "Sabu3319"},
+    "Tomas Maldonado": {"rol": "administrador", "clave": "admin123"},
+    "Simon Romoleroux": {"rol": "administrador", "clave": "admin123"},
+    "Eva Godoy": {"rol": "administrador", "clave": "admin123"},
+}
 
 # Consejos por estilo
 consejos = {
@@ -13,87 +21,104 @@ consejos = {
     "lector/escritor": "Usa listas, resúmenes y escritura repetida."
 }
 
-# Usuarios y contraseñas
-usuarios_autorizados = {
-    "Nicolas Medina": {"rol": "propietario", "clave": "admin2013"},
-    "Tomas Maldonado": {"rol": "admin", "clave": "admin143"},
-    "Simon Romoleroux": {"rol": "admin", "clave": "admin133"},
-    "Eva Godoy": {"rol": "admin", "clave": "admin3"},
-}
-
-# Funciones para la base de datos
+# Cargar base de datos
 def cargar_estudiantes():
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r") as f:
             return json.load(f)
     return {}
 
+# Guardar base de datos
 def guardar_estudiantes(data):
     with open(DB_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
-# Función de login
+# Validar los datos
+def validar_datos_estudiantes(data):
+    estilos_validos = {"visual", "auditivo", "kinestésico", "lector/escritor"}
+    generos_validos = {"Masculino", "Femenino"}
+
+    errores = []
+    for nombre, datos in data.items():
+        if not isinstance(datos, dict):
+            errores.append(f"{nombre}: No es un diccionario.")
+            continue
+        if "estilo" not in datos:
+            errores.append(f"{nombre}: Falta la clave 'estilo'.")
+        elif datos["estilo"] not in estilos_validos:
+            errores.append(f"{nombre}: Estilo inválido '{datos['estilo']}'.")
+        if "genero" not in datos:
+            errores.append(f"{nombre}: Falta la clave 'genero'.")
+        elif datos["genero"] not in generos_validos:
+            errores.append(f"{nombre}: Género inválido '{datos['genero']}'.")
+    return errores
+
+# Login
 def login():
     st.sidebar.title("🔐 Iniciar sesión")
-    usuario = st.sidebar.selectbox("Usuario", ["Seleccionar"] + list(usuarios_autorizados.keys()))
+    usuario = st.sidebar.text_input("Usuario")
     clave = st.sidebar.text_input("Contraseña", type="password")
-
-    if usuario != "Seleccionar" and clave:
-        datos = usuarios_autorizados.get(usuario)
-        if datos and clave == datos["clave"]:
-            return usuario, datos["rol"]
-        else:
-            st.sidebar.error("Usuario o contraseña incorrectos")
+    if usuario in USUARIOS and clave == USUARIOS[usuario]["clave"]:
+        return usuario, USUARIOS[usuario]["rol"]
+    elif clave:
+        st.sidebar.error("Usuario o contraseña incorrectos")
     return None, None
 
-# Título principal
+# Interfaz principal
 st.title("🎓 Base de Datos: Estilos de Aprendizaje")
-
-# Cargar estudiantes
 estudiantes = cargar_estudiantes()
 
-# Iniciar sesión
+# Validación de datos
+errores = validar_datos_estudiantes(estudiantes)
+if errores:
+    st.warning("⚠️ Errores en la base de datos:")
+    for err in errores:
+        st.text("• " + err)
+    st.stop()
+
 usuario, rol = login()
 
 if usuario:
-    st.success(f"Bienvenido {usuario} ({rol})")
+    st.success(f"Bienvenido {usuario} ({rol}) 👋")
 
-    # Añadir o editar estudiante
-    st.subheader("➕ Añadir o editar estudiante")
-    nombre = st.text_input("Nombre del estudiante")
-    genero = st.selectbox("Género", ["Masculino", "Femenino"])
-    estilo = st.selectbox("Estilo de aprendizaje", list(consejos.keys()))
+    # Solo admins pueden añadir o editar
+    if rol in ["administrador", "propietario"]:
+        st.subheader("➕ Añadir o editar estudiante")
+        nombre = st.text_input("Nombre del estudiante")
+        estilo = st.selectbox("Estilo de aprendizaje", list(consejos.keys()))
+        genero = st.selectbox("Género", ["Masculino", "Femenino"])
+        if st.button("Guardar estudiante"):
+            if nombre:
+                estudiantes[nombre] = {"estilo": estilo, "genero": genero}
+                guardar_estudiantes(estudiantes)
+                st.success(f"{nombre} ha sido guardado o actualizado")
+            else:
+                st.warning("Por favor, escribí un nombre")
 
-    if st.button("Guardar estudiante"):
-        if nombre:
-            estudiantes[nombre] = {"genero": genero, "estilo": estilo}
-            guardar_estudiantes(estudiantes)
-            st.success(f"{nombre} ha sido guardado con estilo '{estilo}'")
+    st.divider()
+
+    # Buscar estudiante
+    st.subheader("🔍 Buscar estudiante")
+    buscar = st.text_input("Buscar por nombre")
+    if buscar:
+        resultado = estudiantes.get(buscar)
+        if resultado:
+            st.info(f"{buscar} tiene un estilo de aprendizaje **{resultado['estilo']}**")
+            st.write("💡 Consejo:", consejos[resultado['estilo']])
+            if rol == "propietario":
+                if st.button("Eliminar estudiante"):
+                    estudiantes.pop(buscar)
+                    guardar_estudiantes(estudiantes)
+                    st.warning(f"{buscar} fue eliminado")
         else:
-            st.warning("Por favor, escribí un nombre")
+            st.error("Estudiante no encontrado")
 
-# Búsqueda visible para todos
-st.subheader("🔍 Buscar estudiante")
-buscar = st.text_input("Buscar por nombre")
-if buscar:
-    datos = estudiantes.get(buscar)
-    if datos:
-        estilo = datos["estilo"]
-        st.info(f"{buscar} tiene un estilo de aprendizaje **{estilo}**")
-        st.write("💡 Consejo:", consejos[estilo])
+    st.divider()
 
-        # Solo el propietario puede eliminar
-        if rol == "propietario" and st.button("Eliminar estudiante"):
-            estudiantes.pop(buscar)
-            guardar_estudiantes(estudiantes)
-            st.warning(f"{buscar} fue eliminado de la base de datos")
-    else:
-        st.error("Estudiante no encontrado")
-
-# Mostrar lista completa (todos la pueden ver)
+# Mostrar todos (público o logueado)
 st.subheader("📋 Lista de todos los estudiantes")
 if estudiantes:
     for nombre, datos in estudiantes.items():
-        st.write(f"**{nombre}** — estilo: *{datos['estilo']}*")
+        st.write(f"**{nombre}** — estilo: *{datos['estilo']}*, género: {datos['genero']}")
 else:
-    st.info("Todavía no hay estudiantes registrados.")
+    st.info("Todavía no hay estudiantes registrados")
