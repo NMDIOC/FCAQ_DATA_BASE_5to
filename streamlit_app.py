@@ -41,7 +41,10 @@ st.title("🎓 Base de Datos: Estilos de Aprendizaje")
 # Cargar datos
 estudiantes = cargar_estudiantes()
 
-if login():
+# Intento de login
+es_admin = login()
+
+if es_admin:
     st.success("Bienvenido administrador 👋")
 
     # Añadir estudiante
@@ -58,27 +61,28 @@ if login():
 
     st.divider()
 
-    # Buscar estudiante por nombre
-    st.subheader("🔍 Buscar estudiante")
-    buscar = st.text_input("Buscar por nombre")
-    if buscar:
-        resultado = estudiantes.get(buscar)
-        if resultado:
-            st.info(f"{buscar} tiene un estilo de aprendizaje **{resultado}**")
-            st.write("💡 Consejo:", consejos[resultado])
-            if st.button("Eliminar estudiante"):
-                estudiantes.pop(buscar)
-                guardar_estudiantes(estudiantes)
-                st.warning(f"{buscar} fue eliminado de la base de datos")
-        else:
-            st.error("Estudiante no encontrado")
+# Buscar estudiante (disponible para todos)
+st.subheader("🔍 Buscar estudiante")
+buscar = st.text_input("Buscar por nombre")
+if buscar:
+    resultado = estudiantes.get(buscar)
+    if resultado:
+        st.info(f"{buscar} tiene un estilo de aprendizaje **{resultado}**")
+        st.write("💡 Consejo:", consejos[resultado])
 
-    st.divider()
-
-    # Mostrar todos los estudiantes
-    st.subheader("📋 Lista de todos los estudiantes")
-    if estudiantes:
-        for nombre, estilo in estudiantes.items():
-            st.write(f"🧒 **{nombre}** — estilo: *{estilo}*")
+        if es_admin and st.button("Eliminar estudiante"):
+            estudiantes.pop(buscar)
+            guardar_estudiantes(estudiantes)
+            st.warning(f"{buscar} fue eliminado de la base de datos")
     else:
-        st.info("Todavía no hay estudiantes registrados")
+        st.error("Estudiante no encontrado")
+
+st.divider()
+
+# Mostrar todos los estudiantes (disponible para todos)
+st.subheader("📋 Lista de todos los estudiantes")
+if estudiantes:
+    for nombre, estilo in estudiantes.items():
+        st.write(f"🧒 **{nombre}** — estilo: *{estilo}*")
+else:
+    st.info("Todavía no hay estudiantes registrados.")
