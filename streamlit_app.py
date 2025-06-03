@@ -2,9 +2,10 @@ import streamlit as st
 import json
 import os
 
+# Archivo para guardar los datos
 DB_FILE = "estudiantes.json"
 
-# Base de consejos por estilo
+# Consejos por estilo
 consejos = {
     "visual": "Usa mapas mentales, diagramas y colores para enseñar.",
     "auditivo": "Habla en voz alta, usa canciones o rimas.",
@@ -12,79 +13,76 @@ consejos = {
     "lector/escritor": "Usa listas, resúmenes y escritura repetida."
 }
 
-# Usuarios permitidos
-usuarios_autorizados = {
-    "Nicolas Medina": {"rol": "propietario", "clave": "Admin2013"},
-    "Tomas Maldonado": {"rol": "admin", "clave": "FCAQ_DATABASE"},
-    "Simon Romoleroux": {"rol": "admin", "clave": "FCAQ_DATABASE"},
-    "Eva Godoy": {"rol": "admin", "clave": "FCAQ_DATABASE"},
-}
-
-# Cargar y guardar datos
+# Cargar base de datos
 def cargar_estudiantes():
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r") as f:
             return json.load(f)
     return {}
 
+# Guardar base de datos
 def guardar_estudiantes(data):
     with open(DB_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
-# Login con usuario y contraseña
+# Login de admin
 def login():
     st.sidebar.title("🔐 Iniciar sesión")
-    usuario = st.sidebar.selectbox("Selecciona tu usuario", list(usuarios_autorizados.keys()))
-    clave = st.sidebar.text_input("Contraseña", type="password")
+    clave = st.sidebar.text_input("Contraseña de administrador", type="password")
+    if clave == "FCAQ_DATABASE":
+        return True
+    elif clave != "":
+        st.sidebar.error("Contraseña incorrecta")
+    return False
 
-    if clave:
-        if clave == usuarios_autorizados[usuario]["clave"]:
-            return usuario, usuarios_autorizados[usuario]["rol"]
-        else:
-            st.sidebar.error("Contraseña incorrecta")
-    return None, None
-
-# Interfaz principal
+# Título principal
 st.title("🎓 Base de Datos: Estilos de Aprendizaje")
 
-usuario, rol = login()
+# Cargar datos
 estudiantes = cargar_estudiantes()
 
-if usuario:
-    st.success(f"Bienvenido {usuario} ({rol})")
+# Intento de login
+es_admin = login()
 
-    st.subheader("➕ Añadir o editar estudiante")
+if es_admin:
+    st.success("Bienvenido administrador 👋")
+
+    # Añadir estudiante
+    st.subheader("➕ Añadir estudiante")
     nombre = st.text_input("Nombre del estudiante")
-    genero = st.selectbox("Género", ["Masculino", "Femenino"])
     estilo = st.selectbox("Estilo de aprendizaje", list(consejos.keys()))
-
     if st.button("Guardar estudiante"):
         if nombre:
-            estudiantes[nombre] = {"genero": genero, "estilo": estilo}
+            estudiantes[nombre] = estilo
             guardar_estudiantes(estudiantes)
             st.success(f"{nombre} ha sido guardado con estilo '{estilo}'")
         else:
             st.warning("Por favor, escribí un nombre")
 
+    st.divider()
+
+# Buscar estudiante (disponible para todos)
 st.subheader("🔍 Buscar estudiante")
 buscar = st.text_input("Buscar por nombre")
 if buscar:
-    datos = estudiantes.get(buscar)
-    if datos:
-        estilo = datos["estilo"]
-        st.info(f"{buscar} tiene un estilo de aprendizaje **{estilo}**")
-        st.write("💡 Consejo:", consejos[estilo])
+    resultado = estudiantes.get(buscar)
+    if resultado:
+        st.info(f"{buscar} tiene un estilo de aprendizaje **{resultado}**")
+        st.write("💡 Consejo:", consejos[resultado])
 
-        if rol == "propietario" and st.button("Eliminar estudiante"):
+        if es_admin and st.button("Eliminar estudiante"):
             estudiantes.pop(buscar)
             guardar_estudiantes(estudiantes)
             st.warning(f"{buscar} fue eliminado de la base de datos")
     else:
         st.error("Estudiante no encontrado")
 
+st.divider()
+
+# Mostrar todos los estudiantes (disponible para todos)
 st.subheader("📋 Lista de todos los estudiantes")
 if estudiantes:
-    for nombre, datos in estudiantes.items():
-        st.write(f"**{nombre}** — estilo: *{datos['estilo']}*")
+    for nombre, estilo in estudiantes.items():
+        st.write(f"🧒 **{nombre}** — estilo: *{estilo}*")
 else:
     st.info("Todavía no hay estudiantes registrados.")
