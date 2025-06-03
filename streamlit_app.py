@@ -18,10 +18,10 @@ def guardar_datos(data):
 
 # Lista de usuarios y contraseñas
 usuarios = {
-    "Nicolas Medina": {"rol": "propietario", "contraseña": "Sabu3319"},
-    "Tomas Maldonado": {"rol": "administrador", "contraseña": "admin123"},
-    "Simon Romoleroux": {"rol": "administrador", "contraseña": "admin123"},
-    "Eva Godoy": {"rol": "administradora", "contraseña": "admin123"},
+    "Nicolas Medina": {"rol": "propietario", "contraseña": "admin2013"},
+    "Tomas Maldonado": {"rol": "administrador", "contraseña": "admin133"},
+    "Simon Romoleroux": {"rol": "administrador", "contraseña": "admin122"},
+    "Eva Godoy": {"rol": "administradora", "contraseña": "admin3"},
     "invitado": {"rol": "invitado", "contraseña": "invitado123"}
 }
 
