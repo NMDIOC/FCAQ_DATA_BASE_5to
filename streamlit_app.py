@@ -7,10 +7,10 @@ DB_FILE = "estudiantes.json"
 
 # Usuarios autorizados
 USUARIOS = {
-    "Nicolas Medina": {"rol": "propietario", "clave": "Sabu3319"},
-    "Tomas Maldonado": {"rol": "administrador", "clave": "admin123"},
-    "Simon Romoleroux": {"rol": "administrador", "clave": "admin123"},
-    "Eva Godoy": {"rol": "administradora", "clave": "admin123"},
+    "Nicolas Medina": {"rol": "propietario", "clave": "admin2013"},
+    "Tomas Maldonado": {"rol": "administrador", "clave": "admin143"},
+    "Simon Romoleroux": {"rol": "administrador", "clave": "admin133"},
+    "Eva Godoy": {"rol": "administradora", "clave": "admin3"},
 }
 
 # Consejos según estilo
