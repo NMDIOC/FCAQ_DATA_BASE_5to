@@ -2,87 +2,85 @@ import streamlit as st
 import json
 import os
 
-# Archivo para guardar los datos
 DB_FILE = "estudiantes.json"
 
-# Consejos por estilo
-consejos = {
-    "visual": "Usa mapas mentales, diagramas y colores para enseñar.",
-    "auditivo": "Habla en voz alta, usa canciones o rimas.",
-    "kinestésico": "Incorpora movimiento, juegos físicos o manualidades.",
-    "lector/escritor": "Usa listas, resúmenes y escritura repetida."
-}
+# Función para cargar base de datos
+def cargar_datos():
+    if not os.path.exists(DB_FILE):
+        return {}
+    with open(DB_FILE, "r") as f:
+        return json.load(f)
 
-# Cargar base de datos
-def cargar_estudiantes():
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-# Guardar base de datos
-def guardar_estudiantes(data):
+# Función para guardar base de datos
+def guardar_datos(data):
     with open(DB_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
-# Login de admin
-def login():
-    st.sidebar.title("🔐 Iniciar sesión")
-    clave = st.sidebar.text_input("Contraseña de administrador", type="password")
-    if clave == "FCAQ_DATABASE":
-        return True
-    elif clave != "":
-        st.sidebar.error("Contraseña incorrecta")
-    return False
+# Lista de usuarios y contraseñas
+usuarios = {
+    "Nicolas Medina": {"rol": "propietario", "contraseña": "Sabu3319"},
+    "Tomas Maldonado": {"rol": "administrador", "contraseña": "admin123"},
+    "Simon Romoleroux": {"rol": "administrador", "contraseña": "admin123"},
+    "Eva Godoy": {"rol": "administradora", "contraseña": "admin123"},
+    "invitado": {"rol": "invitado", "contraseña": "invitado123"}
+}
 
-# Título principal
+st.set_page_config(page_title="Base de Datos de Estilos", layout="centered")
 st.title("🎓 Base de Datos: Estilos de Aprendizaje")
 
-# Cargar datos
-estudiantes = cargar_estudiantes()
+# Autenticación
+st.sidebar.header("🔐 Iniciar sesión")
+usuario = st.sidebar.selectbox("Selecciona tu usuario", list(usuarios.keys()))
+clave_ingresada = st.sidebar.text_input("Contraseña", type="password")
 
-# Intento de login
-es_admin = login()
+if clave_ingresada == usuarios[usuario]["contraseña"]:
+    rol = usuarios[usuario]["rol"]
+    st.sidebar.success(f"Sesión iniciada como {usuario} ({rol})")
+    db = cargar_datos()
 
-if es_admin:
-    st.success("Bienvenido administrador 👋")
+    # Buscar estudiante
+    st.subheader("🔍 Buscar estudiante")
+    busqueda = st.text_input("Buscar por nombre")
 
-    # Añadir estudiante
-    st.subheader("➕ Añadir estudiante")
-    nombre = st.text_input("Nombre del estudiante")
-    estilo = st.selectbox("Estilo de aprendizaje", list(consejos.keys()))
-    if st.button("Guardar estudiante"):
-        if nombre:
-            estudiantes[nombre] = estilo
-            guardar_estudiantes(estudiantes)
-            st.success(f"{nombre} ha sido guardado con estilo '{estilo}'")
-        else:
-            st.warning("Por favor, escribí un nombre")
+    resultados = {nombre: datos for nombre, datos in db.items() if busqueda.lower() in nombre.lower()}
 
-    st.divider()
+    if resultados:
+        for nombre, datos in resultados.items():
+            st.write(f"**{nombre}** — género: {datos['genero']} — estilo: *{datos['estilo']}*")
 
-# Buscar estudiante (disponible para todos)
-st.subheader("🔍 Buscar estudiante")
-buscar = st.text_input("Buscar por nombre")
-if buscar:
-    resultado = estudiantes.get(buscar)
-    if resultado:
-        st.info(f"{buscar} tiene un estilo de aprendizaje **{resultado}**")
-        st.write("💡 Consejo:", consejos[resultado])
+    # Mostrar todos
+    st.subheader("📋 Lista de todos los estudiantes")
+    for nombre, datos in db.items():
+        st.write(f"**{nombre}** — género: {datos['genero']} — estilo: *{datos['estilo']}*")
 
-        if es_admin and st.button("Eliminar estudiante"):
-            estudiantes.pop(buscar)
-            guardar_estudiantes(estudiantes)
-            st.warning(f"{buscar} fue eliminado de la base de datos")
-    else:
-        st.error("Estudiante no encontrado")
+    # Modo administrador (menos para invitados)
+    if rol != "invitado":
+        st.sidebar.markdown("---")
+        st.sidebar.header("⚙️ Administrar estudiantes")
 
-st.divider()
+        modo = st.sidebar.selectbox("Acción", ["Agregar o editar", "Eliminar"])
 
-# Mostrar todos los estudiantes (disponible para todos)
-st.subheader("📋 Lista de todos los estudiantes")
-if estudiantes:
-    for nombre, estilo in estudiantes.items():
-        st.write(f"🧒 **{nombre}** — estilo: *{estilo}*")
+        nombre = st.sidebar.text_input("Nombre del estudiante")
+        genero = st.sidebar.selectbox("Género", ["Masculino", "Femenino", "Otro"])
+        estilo = st.sidebar.text_input("Estilo de aprendizaje")
+
+        if modo == "Agregar o editar":
+            if st.sidebar.button("Guardar"):
+                db[nombre] = {"genero": genero, "estilo": estilo}
+                guardar_datos(db)
+                st.sidebar.success("Estudiante guardado correctamente")
+
+        elif modo == "Eliminar":
+            if rol == "propietario":
+                if nombre in db:
+                    if st.sidebar.button("Eliminar"):
+                        del db[nombre]
+                        guardar_datos(db)
+                        st.sidebar.success("Estudiante eliminado")
+                else:
+                    st.sidebar.warning("Nombre no encontrado en la base de datos")
+            else:
+                st.sidebar.warning("Solo el propietario puede eliminar estudiantes")
+
 else:
-    st.info("Todavía no hay estudiantes registrados.")
+    st.warning("🔒 Ingresa la contraseña correcta para acceder")
