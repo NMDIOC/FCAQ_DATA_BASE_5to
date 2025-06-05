@@ -21,7 +21,7 @@ usuarios = {
     "Nicolas Medina": {"rol": "propietario", "contraseña": "admin2013"},
     "Tomas Maldonado": {"rol": "administrador", "contraseña": "admin133"},
     "Simon Romoleroux": {"rol": "administrador", "contraseña": "admin122"},
-    "Eva Godoy": {"rol": "administradora", "contraseña": "admin3"},
+    "Eva Godoy": {"rol": "administradora", "contraseña": "Turo8404!"},
     "invitado": {"rol": "invitado", "contraseña": "invitado123"}
 }
 
@@ -46,12 +46,12 @@ if clave_ingresada == usuarios[usuario]["contraseña"]:
 
     if resultados:
         for nombre, datos in resultados.items():
-            st.write(f"**{nombre}** — género: {datos['genero']} — estilo: *{datos['estilo']}*")
+            st.write(f"**{nombre}** — paralelo: {datos['paralelo']} — estilo: *{datos['estilo']}*")
 
     # Mostrar todos
     st.subheader("📋 Lista de todos los estudiantes")
     for nombre, datos in db.items():
-        st.write(f"**{nombre}** — género: {datos['genero']} — estilo: *{datos['estilo']}*")
+        st.write(f"**{nombre}** — paralelo: {datos['paralelo']} — estilo: *{datos['estilo']}*")
 
     # Modo administrador (menos para invitados)
     if rol != "invitado":
@@ -61,12 +61,12 @@ if clave_ingresada == usuarios[usuario]["contraseña"]:
         modo = st.sidebar.selectbox("Acción", ["Agregar o editar", "Eliminar"])
 
         nombre = st.sidebar.text_input("Nombre del estudiante")
-        genero = st.sidebar.selectbox("Género", ["Masculino", "Femenino", "Otro"])
-        estilo = st.sidebar.text_input("Estilo de aprendizaje")
+        paralelo = st.sidebar.selectbox("paralelo", ["A", "B", "C", "D", "E", "F"])
+        estilo = st.sidebar.text_input("Estilo de aprendizaje", ["Visual", "Auditivo", "Kinestesico", "lector/escritor"])
 
         if modo == "Agregar o editar":
             if st.sidebar.button("Guardar"):
-                db[nombre] = {"genero": genero, "estilo": estilo}
+                db[nombre] = {"paralelo": paralelo, "estilo": estilo}
                 guardar_datos(db)
                 st.sidebar.success("Estudiante guardado correctamente")
 
